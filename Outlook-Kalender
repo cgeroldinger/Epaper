@@ -1,0 +1,88 @@
+alias: Tag-BIG1-Save
+description: E-Paper Layout mit Wochentagen (Mo, Di...) vor dem Datum
+triggers:
+  - trigger: time_pattern
+    hours: /2
+    minutes: "15"
+conditions:
+  - condition: time
+    after: "05:00:00"
+    before: "23:00:00"
+actions:
+  - variables:
+      tage_vorschau: 90
+      event_limit: 5
+  - target:
+      entity_id:
+        - calendar.o365_hotmail_geburtstage
+        - calendar.o365_hotmail_kalender
+        - calendar.o365_hotmail_waltraud_geroldinger
+    data:
+      start_date_time: "{{ now().strftime('%Y-%m-%d 00:00:00') }}"
+      end_date_time: >-
+        {{ (now() + timedelta(days=tage_vorschau)).strftime('%Y-%m-%d 00:00:00')
+        }}
+    response_variable: cal_all_30_days
+    action: calendar.get_events
+  - target:
+      device_id: 1670ba7db56e60c434993b94f7c193e9
+    data:
+      rotate: 0
+      background: white
+      refresh_type: "1"
+      payload: >-
+        {% set wochentage = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"] %} {% set
+        monate = ["Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep",
+        "Okt", "Nov", "Dez"] %} {% set ns = namespace(y=15) %}
+
+        {% set font_normal = "/media/arial.ttf" %}  {% set font_bold =
+        "/media/arialbd.ttf" %}  {% set font_header = "/media/corbelz.ttf" %} {%
+        set font_time = "/media/corbel.ttf" %}
+
+        {% set event_spacing = 34 %} {% set block_spacing = 24 %} {% set
+        font_size_header = 32 %} {% set font_size_event = 28 %}
+
+        {# X-POSITIONEN LEICHT ANGEPASST FÜR WOCHENTAG #}  {% set x_date = 10 %}
+        {% set x_time = 190 %}  {# von 180 auf 220 erhöht #}  {% set x_text =
+        310 %}  {# von 320 auf 340 erhöht #} {% set x_info = 760 %}
+
+        [
+          {"type": "text", "value": "{{ now().strftime('%d.%m.%Y %H:%M') }}", "font": "{{ font_time }}", "x": {{ x_info }}, "y": 10, "size": 24, "color": "black", "anchor": "lt"},
+          {"type": "text", "value": "{{ tage_vorschau }} Tage, {{ event_limit }} Events", "font": "{{ font_time }}", "x": {{ x_info }}, "y": 40, "size": 24, "color": "black", "anchor": "lt"}
+
+          {% for cal_id in ["calendar.o365_hotmail_geburtstage", "calendar.o365_hotmail_kalender", "calendar.o365_hotmail_waltraud_geroldinger"] %}
+            {% if cal_all_30_days[cal_id] is defined and cal_all_30_days[cal_id].events | length > 0 %}
+              {% set label = "Geburtstage" if "geburtstage" in cal_id else ("Waltraud" if "waltraud" in cal_id else "Christian") %}
+              
+              ,{"type": "text", "value": "-- {{ label }} --", "font": "{{ font_header }}", "x": {{ x_date }}, "y": {{ ns.y }}, "size": {{ font_size_header }}, "color": "black"}
+              {% set ns.y = ns.y + event_spacing %}
+              
+              {% for event in (cal_all_30_days[cal_id].events | sort(attribute='start'))[:event_limit] %}
+                {% set dt = as_local(as_datetime(event.start)) %}
+                {% set is_today = (dt.date() == now().date()) %}
+                {% set current_font = font_normal if is_today else font_bold %}
+                
+                {# WOCHENTAG + DATUM KOMBINIEREN #}
+                {% set tag = "0" ~ dt.day if dt.day < 10 else dt.day %}
+                {% set datum_string = wochentage[dt.weekday()] ~ ", " ~ tag ~ ". " ~ monate[dt.month-1] %}
+
+                
+                {% set summary = event.summary.replace("Geburtstag von", "").strip() %}
+                {% set desc = " - " ~ event.description.strip() if event.description is defined and event.description else "" %}
+                {% set text = summary ~ desc %}
+                {% set zeit_anzeige = "" if "geburtstage" in cal_id else (dt.strftime('%H:%M') if not event.all_day else '--:--') %}
+                
+                ,{"type": "text", "value": "{{ datum_string }}", "font": "{{ current_font }}", "x": {{ x_date }}, "y": {{ ns.y }}, "size": {{ font_size_event }}}
+                ,{"type": "text", "value": "{{ zeit_anzeige }}", "font": "{{ current_font }}", "x": {{ x_time }}, "y": {{ ns.y }}, "size": {{ font_size_event }}}
+                ,{"type": "text", "value": "{{ text | truncate(48, True, '...') }}", "font": "{{ current_font }}", "x": {{ x_text }}, "y": {{ ns.y }}, "size": {{ font_size_event }}}
+
+                {% set ns.y = ns.y + event_spacing %}
+              {% endfor %}
+              
+              {% set ns.y = ns.y + block_spacing %}
+            {% endif %}
+          {% endfor %}
+        ]
+      dry-run: false
+    action: open_epaper_link.drawcustom
+mode: single
