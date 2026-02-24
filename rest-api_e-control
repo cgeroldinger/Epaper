@@ -1,0 +1,61 @@
+# rest_sensors.yaml
+- resource: https://api.e-control.at/sprit/1.0/search/gas-stations/by-address?latitude=48.326370&longitude=14.282797&fuelType=DIE&includeClosed=true
+  headers:
+    accept: application/json
+  scan_interval: 1800
+  sensor:
+    - name: fuel_price_linz_die_1
+      device_class: monetary
+      value_template: "{{ value_json[0]['prices'][0]['amount'] }}"
+      unit_of_measurement: "EUR"
+      force_update: True
+      json_attributes_path: "$[0]"
+      json_attributes:
+        - name
+        - id
+        - location
+        - distance
+    - name: fuel_price_linz_die_2
+      device_class: monetary
+      value_template: "{{ value_json[1]['prices'][0]['amount'] }}"
+      unit_of_measurement: "EUR"
+      force_update: True
+      json_attributes_path: "$[1]"
+      json_attributes:
+        - name
+        - id
+        - location
+        - distance
+    - name: fuel_price_linz_die_3
+      device_class: monetary
+      value_template: "{{ value_json[2]['prices'][0]['amount'] }}"
+      unit_of_measurement: "EUR"
+      force_update: True
+      json_attributes_path: "$[2]"
+      json_attributes:
+        - name
+        - id
+        - location
+        - distance
+    - name: fuel_price_linz_die_4
+      device_class: monetary
+      value_template: "{{ value_json[3]['prices'][0]['amount'] }}"
+      unit_of_measurement: "EUR"
+      force_update: True
+      json_attributes_path: "$[3]"
+      json_attributes:
+        - name
+        - id
+        - location
+        - distance
+    - name: fuel_price_linz_die_5
+      device_class: monetary
+      value_template: "{{ value_json[4]['prices'][0]['amount'] }}"
+      unit_of_measurement: "EUR"
+      force_update: True
+      json_attributes_path: "$[4]"
+      json_attributes:
+        - name
+        - id
+        - location
+        - distance
