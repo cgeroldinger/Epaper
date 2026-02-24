@@ -1,0 +1,278 @@
+alias: TAG13 - Test Dashboard (Tiguan)
+description: Optimiertes 800x480 Layout mit Gelb-Akzenten
+triggers:
+  - trigger: time_pattern
+    hours: /2
+  - trigger: state
+    entity_id: binary_sensor.tiger_r_doors_locked
+    to: "on"
+    for: "00:05:00"
+conditions:
+  - condition: time
+    after: "06:00:00"
+    before: "23:01:00"
+actions:
+  - action: open_epaper_link.drawcustom
+    target:
+      device_id: e0661077e4d241c335256b81fe4cfb83
+    data:
+      background: white
+      rotate: 180
+      payload:
+        - type: text
+          value: >-
+            {% set tage = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag',
+            'Freitag', 'Samstag', 'Sonntag'] %}{{ tage[now().weekday()] }}, {{
+            now().strftime('%d.%m.%Y') }}
+          font: /media/GothamRnd-Bold.ttf
+          x: 20
+          "y": 20
+          size: 35
+          color: black
+        - type: text
+          value: "{{ now().strftime('%H:%M') }}"
+          font: /media/GothamRnd-Bold.ttf
+          x: 780
+          "y": 20
+          size: 35
+          color: black
+          anchor: ra
+        - type: line
+          x_start: 20
+          x_end: 780
+          y_start: 70
+          y_end: 70
+          width: 3
+          color: black
+        - type: icon
+          value: mdi:speedometer
+          x: 20
+          "y": 80
+          size: 80
+          color: black
+        - type: text
+          value: "{{ states('sensor.tiger_r_odometer') }} km"
+          x: 130
+          "y": 105
+          font: /media/arialbd.ttf
+          size: 40
+          color: black
+        - type: icon
+          value: mdi:counter
+          x: 30
+          "y": 230
+          size: 60
+          color: black
+        - type: text
+          value: "{{ states('counter.trip_counter') }} Trips"
+          x: 130
+          "y": 250
+          font: /media/arialbd.ttf
+          size: 40
+          color: black
+        - type: text
+          value: >
+            {% set last =
+            as_timestamp(state_attr('sensor.tiger_r_last_trip_duration_2',
+            'last_updated')) %} Last Trip  ({{ last | timestamp_custom('%d.%m.
+            %H:%M') if last else 'Unbekannt' }})
+          x: 28
+          "y": 315
+          font: /media/arial.ttf
+          size: 25
+          color: black
+        - type: text
+          value: >
+            {{ states('sensor.tiger_r_last_trip_duration_2') }} min, {{
+            states('sensor.tiger_r_last_trip_length_2') }} km, {{
+            states('sensor.tiger_r_last_trip_average_speed_2') }} km/h, {{
+            states('sensor.tiger_r_last_trip_average_fuel_consumption_2') }} l
+          x: 28
+          "y": 360
+          font: /media/arialbd.ttf
+          size: 25
+          color: black
+        - type: icon
+          value: >-
+            {{ 'mdi:lock-open-variant' if
+            is_state('binary_sensor.tiger_r_doors_locked', 'on') else 'mdi:lock'
+            }}
+          x: 28
+          "y": 160
+          size: 60
+          color: >-
+            {{ 'yellow' if is_state('binary_sensor.tiger_r_doors_locked', 'on')
+            else 'black' }}
+        - type: text
+          value: >-
+            {{ 'OFFEN' if is_state('binary_sensor.tiger_r_doors_locked', 'on')
+            else 'Locked' }}
+          x: 130
+          "y": 177
+          font: /media/arialbd.ttf
+          size: 40
+          color: >-
+            {{ 'yellow' if is_state('binary_sensor.tiger_r_doors_locked', 'on')
+            else 'black' }}
+        - type: line
+          x_start: 390
+          x_end: 390
+          y_start: 90
+          y_end: 395
+          width: 2
+          color: black
+        - type: icon
+          value: mdi:gas-station
+          x: 410
+          "y": 95
+          size: 45
+          color: >-
+            {{ 'yellow' if states('sensor.tiger_r_fuel_level')|int < 15 else
+            'black' }}
+        - type: text
+          value: >-
+            {{ states('sensor.tiger_r_fuel_range') }} km ({{
+            states('sensor.tiger_r_fuel_level') }}%)
+          x: 470
+          "y": 105
+          size: 30
+          font: /media/arialbd.ttf
+          color: black
+        - type: rectangle
+          x_start: 470
+          x_end: 770
+          y_start: 140
+          y_end: 155
+          width: 2
+          fill: white
+          outline: black
+        - type: rectangle
+          x_start: >
+            {% set pct = states('sensor.tiger_r_fuel_level')|int(0) %}{% set
+            fill = (pct / 100 * 296)|int %}{{ 768 - (fill if fill <= 296 else
+            296) }}
+          x_end: 768
+          y_start: 142
+          y_end: 153
+          fill: >-
+            {{ 'yellow' if states('sensor.tiger_r_fuel_level')|int < 15 else
+            'black' }}
+        - type: icon
+          value: mdi:oil
+          x: 410
+          "y": 180
+          size: 48
+          color: black
+        - type: text
+          value: >-
+            {{ states('sensor.tiger_r_oil_inspection_distance') }} km / {{
+            states('sensor.tiger_r_oil_inspection_days') }} Tage
+          x: 470
+          "y": 190
+          size: 30
+          font: /media/arialbd.ttf
+          color: black
+        - type: rectangle
+          x_start: 470
+          x_end: 770
+          y_start: 225
+          y_end: 240
+          width: 2
+          fill: white
+          outline: black
+        - type: rectangle
+          x_start: >
+            {% set km = states('sensor.tiger_r_oil_inspection_distance')|int(0)
+            %}{% set fill = (km / 30000 * 296)|int %}{{ 768 - (fill if fill <=
+            296 else 296) }}
+          x_end: 768
+          y_start: 227
+          y_end: 238
+          fill: >-
+            {{ 'yellow' if states('sensor.tiger_r_oil_inspection_distance')|int
+            < 3000 else 'black' }}
+        - type: icon
+          value: mdi:water
+          x: 406
+          "y": 266
+          size: 48
+          color: >-
+            {{ 'yellow' if states('sensor.tiger_r_adblue_level')|int < 2000 else
+            'black' }}
+        - type: text
+          value: "AdBlue: {{ states('sensor.tiger_r_adblue_level') }} km"
+          x: 470
+          "y": 275
+          size: 30
+          font: /media/arialbd.ttf
+          color: black
+        - type: rectangle
+          x_start: 470
+          x_end: 770
+          y_start: 310
+          y_end: 325
+          width: 2
+          fill: white
+          outline: black
+        - type: rectangle
+          x_start: >
+            {% set km = states('sensor.tiger_r_adblue_level')|int(0) %}{% set
+            fill = (km / 20000 * 296)|int %}{{ 768 - (fill if fill <= 296 else
+            296) }}
+          x_end: 768
+          y_start: 312
+          y_end: 323
+          fill: >-
+            {{ 'yellow' if states('sensor.tiger_r_adblue_level')|int < 2000 else
+            'black' }}
+
+        - type: icon
+          value: mdi:tools
+          x: 410
+          "y": 350
+          size: 40
+          color: >-
+            {{ 'yellow' if states('sensor.tiger_r_adblue_level')|int < 2000 else
+            'black' }}
+
+        - type: text
+          value: >
+            {{ states('sensor.tiger_r_service_inspection_distance') }} km  / {{
+            states('sensor.tiger_r_service_inspection_days') }} Tage
+          x: 470
+          "y": 360
+          size: 30
+          font: /media/arialbd.ttf
+          color: black
+        
+        - type: rectangle
+          x_start: 20
+          x_end: 780
+          y_start: 410
+          y_end: 475
+          width: 2
+          fill: white
+          outline: black
+        - type: text
+          value: "Diesel: {{ states('sensor.fuel_price_linz_die_1') }} €"
+          x: 30
+          "y": 430
+          font: /media/arialbd.ttf
+          size: 35
+          color: black
+        - type: text
+          value: >
+            {% set names = {'AVANTI - Linz-Urfahr Linke Brückenstraße 32':
+            'Avanti - Linke Brückenstr.', 'speed-DISKONT-automatic Linz/Urfahr':
+            'Speed-Avia', 'JET - TANKSTELLE': 'JET'} %} {{
+            names.get(state_attr('sensor.fuel_price_linz_die_1', 'name'),
+            state_attr('sensor.fuel_price_linz_die_1', 'name') |
+            default('Tankstelle')) }}
+          x: 320
+          "y": 430
+          font: /media/arialbd.ttf
+          size: 35
+          color: black
+      dither: "0"
+      refresh_type: "1"
+      dry-run: false
